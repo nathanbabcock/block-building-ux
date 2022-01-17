@@ -1,6 +1,6 @@
 import React, { useRef } from 'react'
 import ReactDOM from 'react-dom'
-import { Canvas } from 'react-three-fiber'
+import { Canvas } from '@react-three/fiber'
 import { Mesh } from 'three'
 import './index.scss'
 
