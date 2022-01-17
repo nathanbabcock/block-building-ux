@@ -17,11 +17,13 @@ function Block(props: any) {
 }
 
 ReactDOM.render(
-  <Canvas>
-    <ambientLight />
-    <pointLight position={[10, 10, 10]} />
-    <Block position={[-1.2, 0, 0]} />
-    <Block position={[1.2, 0, 0]} />
-  </Canvas>,
+  <div style={{ width: "100vw", height: "100vh" }}>
+    <Canvas>
+      <ambientLight />
+      <pointLight position={[10, 10, 10]} />
+      <Block position={[-1.2, 0, 0]} />
+      <Block position={[1.2, 0, 0]} />
+    </Canvas>
+  </div>,
   document.getElementById('root')
 )
