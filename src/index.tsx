@@ -1,9 +1,20 @@
+import { OrbitControls, TransformControls } from '@react-three/drei'
+import { Canvas, extend, useThree } from '@react-three/fiber'
 import React, { useRef } from 'react'
 import ReactDOM from 'react-dom'
-import { Canvas } from '@react-three/fiber'
-import { Group, Mesh } from 'three'
+import { BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
+import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import './index.scss'
-import { OrbitControls } from '@react-three/drei'
+
+extend({ DragControls })
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      dragControls: any
+    }
+  }
+}
 
 /** A connection point for a Block */
 function Node(props: {
@@ -26,26 +37,49 @@ function Block(props: any) {
   const mesh = useRef<Mesh>()
 
   return (
-    <group {...props}>
-      <Node type="female" position={[0, -0.5, 0]}/>
-      <Node type="male" position={[0, 0.5, 0]}/>
+    
 
-      <mesh ref={mesh}>
-        <boxBufferGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={'orange'} />
-      </mesh>
+    <group {...props}>
+      <TransformControls mode="translate" showZ={false}>
+        <>
+          <Node type="female" position={[0, -0.5, 0]} />
+          <Node type="male" position={[0, 0.5, 0]} />
+
+          <mesh ref={mesh}>
+            <boxBufferGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color={'orange'} />
+          </mesh>
+        </>
+      </TransformControls>
     </group>
   )
+}
+
+function Scene() {
+  const {
+    camera,
+    gl: { domElement }
+  } = useThree()
+
+  const mesh = new Mesh(new BoxGeometry(1, 1, 1), new MeshBasicMaterial({ color: 0xff00ff }))
+
+  return <>
+    <OrbitControls makeDefault/>
+    {/* <dragControls args={[[mesh], camera, domElement]} /> */}
+
+    <ambientLight intensity={0.25} />
+    <pointLight position={[10, 10, 10]} />
+    
+    <Block position={[-1.2, 0, 0]} />
+    <Block position={[1.2, 0, 0]} />
+    <primitive object={mesh} />
+  </>
 }
 
 ReactDOM.render(
   <div style={{ width: "100vw", height: "100vh" }}>
     <Canvas>
-      <OrbitControls/>
-      <ambientLight intensity={0.25}/>
-      <pointLight position={[10, 10, 10]} />
-      <Block position={[-1.2, 0, 0]} />
-      <Block position={[1.2, 0, 0]} />
+      <Scene />
     </Canvas>
   </div>,
   document.getElementById('root')
