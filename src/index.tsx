@@ -1,6 +1,6 @@
 import { OrbitControls, TransformControls, TransformControlsProps } from '@react-three/drei'
 import { Canvas, extend } from '@react-three/fiber'
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { Mesh } from 'three'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
@@ -34,16 +34,27 @@ function Node(props: {
   )
 }
 
-function Block(props: any) {
-  // This reference will give us direct access to the mesh
+function Block(props: {
+  position?: [number, number, number],
+  onDraggingChanged: (value: boolean, mesh: Mesh) => any
+}) {
   const mesh = useRef<Mesh>()
+  const transformControls: any = useRef(null)
+  const { onDraggingChanged } = props
 
-  const transformControls = useRef<any>(null)
+  const draggingChangedListener = (event: any) => {
+    console.log(event)
+    onDraggingChanged(event.value, mesh.current!)
+  }
 
   useEffect(() => {
     if (!transformControls.current) return
-    transformControls.current.addEventListener('dragging-changed', console.log)
-  }, [transformControls])
+    transformControls.current.addEventListener('dragging-changed', draggingChangedListener)
+    return () => {
+      if (!transformControls.current) return
+      transformControls.current.removeEventListener('dragging-changed', draggingChangedListener)
+    }
+  })
 
   return (
     <group {...props}>
@@ -63,6 +74,13 @@ function Block(props: any) {
 }
 
 function Scene() {
+  const [dragging, setDragging] = useState(false)
+
+  const onDraggingChanged = (value: boolean, mesh: Mesh) => {
+    console.log('Dragging changed to ', value)
+    setDragging(value)
+  }
+
   return <>
     <OrbitControls makeDefault/>
     {/* <dragControls args={[[mesh], camera, domElement]} /> */}
@@ -70,8 +88,8 @@ function Scene() {
     <ambientLight intensity={0.25} />
     <pointLight position={[10, 10, 10]} />
     
-    <Block position={[-1.2, 0, 0]} />
-    <Block position={[1.2, 0, 0]} />
+    <Block position={[-1.2, 0, 0]} onDraggingChanged={onDraggingChanged}/>
+    <Block position={[1.2, 0, 0]} onDraggingChanged={onDraggingChanged}/>
   </>
 }
 
