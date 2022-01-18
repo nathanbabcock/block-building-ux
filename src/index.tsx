@@ -1,8 +1,8 @@
-import { OrbitControls, TransformControls, TransformControlsProps } from '@react-three/drei'
-import { Canvas, extend } from '@react-three/fiber'
+import { OrbitControls, TransformControls } from '@react-three/drei'
+import { Canvas, extend, ThreeEvent } from '@react-three/fiber'
 import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom'
-import { Mesh } from 'three'
+import { Mesh, Vector3 } from 'three'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import './index.scss'
 
@@ -18,13 +18,45 @@ declare global {
 
 /** A connection point for a Block */
 function Node(props: {
-  type?: 'male' | 'female',
   position?: [number, number, number],
-} = {}) {
+  type?: 'male' | 'female',
+  dragging: boolean,
+  draggedMesh: Mesh | undefined,
+} = {
+  dragging: false,
+  draggedMesh: undefined,
+}) {
   // This reference will give us direct access to the mesh
   const mesh = useRef<Mesh>()
 
-  const onHover = (...args: any[]) => console.log(args)
+  const onHover = (e: ThreeEvent<PointerEvent>) => {
+    console.log(e)
+    const draggedMesh = props.draggedMesh
+    if (!props.dragging) return
+    if (!mesh.current) return
+    if (!draggedMesh) return
+    if (!draggedMesh.parent) return
+    if (mesh.current.parent === draggedMesh.parent) return // Can't snap to self
+
+    // Hardcoded traversal of Threejs graph
+    const parent = mesh.current.parent!
+    const draggedParent = draggedMesh.parent
+    const pairIndex = props.type === 'female' ? 1 : 0
+    const pairNode = draggedParent.children[pairIndex]
+
+    const pairWorldPos = new Vector3()
+    pairNode.getWorldPosition(pairWorldPos)
+
+    const curWorldPos = new Vector3()
+    mesh.current.getWorldPosition(curWorldPos)
+
+    const diff = pairWorldPos.sub(curWorldPos)
+    const dest = parent.position.add(diff)
+    parent.position.set(dest.x, dest.y, dest.z)
+    console.log('diff', diff)
+
+    e.stopPropagation()
+  }
 
   return (
     <mesh position={props.position} ref={mesh} onPointerOver={onHover}>
@@ -36,7 +68,9 @@ function Node(props: {
 
 function Block(props: {
   position?: [number, number, number],
-  onDraggingChanged: (value: boolean, mesh: Mesh) => any
+  onDraggingChanged: (value: boolean, mesh: Mesh) => any,
+  dragging: boolean,
+  draggedMesh: Mesh | undefined,
 }) {
   const mesh = useRef<Mesh>()
   const transformControls: any = useRef(null)
@@ -52,6 +86,7 @@ function Block(props: {
     transformControls.current.addEventListener('dragging-changed', draggingChangedListener)
     return () => {
       if (!transformControls.current) return
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       transformControls.current.removeEventListener('dragging-changed', draggingChangedListener)
     }
   })
@@ -60,8 +95,8 @@ function Block(props: {
     <group {...props}>
       <TransformControls mode="translate" showZ={false} ref={transformControls}>
         <>
-          <Node type="female" position={[0, -0.5, 0]} />
-          <Node type="male" position={[0, 0.5, 0]} />
+          <Node type="female" position={[0, -0.5, 0]} dragging={props.dragging} draggedMesh={props.draggedMesh}/>
+          <Node type="male" position={[0, 0.5, 0]} dragging={props.dragging} draggedMesh={props.draggedMesh}/>
 
           <mesh ref={mesh}>
             <boxBufferGeometry args={[1, 1, 1]} />
@@ -75,10 +110,13 @@ function Block(props: {
 
 function Scene() {
   const [dragging, setDragging] = useState(false)
+  const [draggedMesh, setDraggedMesh] = useState<Mesh>()
 
   const onDraggingChanged = (value: boolean, mesh: Mesh) => {
-    console.log('Dragging changed to ', value)
+    console.log(`Dragging changed to ${value}`)
     setDragging(value)
+    setDraggedMesh(mesh)
+    console.log(mesh.parent)
   }
 
   return <>
@@ -88,8 +126,8 @@ function Scene() {
     <ambientLight intensity={0.25} />
     <pointLight position={[10, 10, 10]} />
     
-    <Block position={[-1.2, 0, 0]} onDraggingChanged={onDraggingChanged}/>
-    <Block position={[1.2, 0, 0]} onDraggingChanged={onDraggingChanged}/>
+    <Block position={[-1.2, 0, 0]} onDraggingChanged={onDraggingChanged} dragging={dragging} draggedMesh={draggedMesh}/>
+    <Block position={[1.2, 0, 0]} onDraggingChanged={onDraggingChanged} dragging={dragging} draggedMesh={draggedMesh}/>
   </>
 }
 
