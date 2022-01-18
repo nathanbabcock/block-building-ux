@@ -1,8 +1,8 @@
-import { OrbitControls, TransformControls } from '@react-three/drei'
-import { Canvas, extend, useThree } from '@react-three/fiber'
-import React, { useRef } from 'react'
+import { OrbitControls, TransformControls, TransformControlsProps } from '@react-three/drei'
+import { Canvas, extend } from '@react-three/fiber'
+import React, { useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom'
-import { BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
+import { Mesh } from 'three'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import './index.scss'
 
@@ -24,8 +24,10 @@ function Node(props: {
   // This reference will give us direct access to the mesh
   const mesh = useRef<Mesh>()
 
+  const onHover = (...args: any[]) => console.log(args)
+
   return (
-    <mesh position={props.position} ref={mesh}>
+    <mesh position={props.position} ref={mesh} onPointerOver={onHover}>
       <sphereBufferGeometry args={[0.2]} />
       <meshStandardMaterial color={props.type === 'female' ? 'pink' : 'cornflowerblue'} />
     </mesh>
@@ -36,11 +38,16 @@ function Block(props: any) {
   // This reference will give us direct access to the mesh
   const mesh = useRef<Mesh>()
 
-  return (
-    
+  const transformControls = useRef<any>(null)
 
+  useEffect(() => {
+    if (!transformControls.current) return
+    transformControls.current.addEventListener('dragging-changed', console.log)
+  }, [transformControls])
+
+  return (
     <group {...props}>
-      <TransformControls mode="translate" showZ={false}>
+      <TransformControls mode="translate" showZ={false} ref={transformControls}>
         <>
           <Node type="female" position={[0, -0.5, 0]} />
           <Node type="male" position={[0, 0.5, 0]} />
@@ -56,13 +63,6 @@ function Block(props: any) {
 }
 
 function Scene() {
-  const {
-    camera,
-    gl: { domElement }
-  } = useThree()
-
-  const mesh = new Mesh(new BoxGeometry(1, 1, 1), new MeshBasicMaterial({ color: 0xff00ff }))
-
   return <>
     <OrbitControls makeDefault/>
     {/* <dragControls args={[[mesh], camera, domElement]} /> */}
@@ -72,7 +72,6 @@ function Scene() {
     
     <Block position={[-1.2, 0, 0]} />
     <Block position={[1.2, 0, 0]} />
-    <primitive object={mesh} />
   </>
 }
 

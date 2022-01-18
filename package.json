@@ -1,6 +1,6 @@
 {
-  "name": "react-three-fiber-starter",
-  "version": "0.0.0",
+  "name": "block-building-ux",
+  "version": "0.0.1-alpha",
   "private": true,
   "dependencies": {
     "@react-three/drei": "^8.4.0",
