@@ -1,8 +1,7 @@
-import { OrbitControls, TransformControls } from '@react-three/drei'
-import { Canvas, extend, ThreeEvent, useThree } from '@react-three/fiber'
+import { Canvas, extend, Object3DNode, ThreeEvent, useThree } from '@react-three/fiber'
 import React, { forwardRef, MutableRefObject, ReactNode, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom'
-import { Mesh, Vector3 } from 'three'
+import { Mesh, Object3D, Vector3 } from 'three'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import './index.scss'
 
@@ -11,7 +10,7 @@ extend({ DragControls })
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      dragControls: any
+      dragControls: Object3DNode<DragControls, typeof DragControls>
     }
   }
 }
@@ -96,8 +95,8 @@ const Block = forwardRef<ReactNode, BlockProps>((props, ref) => {
 
   return (
     <group {...props} ref={ref}>
-      <TransformControls mode="translate" showZ={false} ref={transformControls}>
-        <>
+      {/* <TransformControls mode="translate" showZ={false} ref={transformControls} enabled={false}>
+        <> */}
           <Node type="female" position={[0, -0.5, 0]} dragging={props.dragging} draggedMesh={props.draggedMesh}/>
           <Node type="male" position={[0, 0.5, 0]} dragging={props.dragging} draggedMesh={props.draggedMesh}/>
 
@@ -105,8 +104,8 @@ const Block = forwardRef<ReactNode, BlockProps>((props, ref) => {
             <boxBufferGeometry args={[1, 1, 1]} />
             <meshStandardMaterial color={'orange'} />
           </mesh>
-        </>
-      </TransformControls>
+        {/* </>
+      </TransformControls> */}
     </group>
   )
 })
@@ -118,8 +117,8 @@ function Scene() {
     camera,
     gl: { domElement }
   } = useThree()
-  const block1 = useRef()
-  const block2 = useRef()
+  const block1 = useRef<Object3D<Event>>()
+  const block2 = useRef<Object3D<Event>>()
 
   const onDraggingChanged = (value: boolean, mesh: Mesh) => {
     console.log(`Dragging changed to ${value}`)
@@ -131,8 +130,8 @@ function Scene() {
   useEffect(() => console.log(block1.current, block2.current))
 
   return <>
-    <OrbitControls makeDefault/>
-    <dragControls args={[[block1, block2], camera, domElement]} />
+    {/* <OrbitControls makeDefault/> */}
+    {block1.current && <dragControls args={[[block1.current], camera, domElement]} transformGroup={true}/>}
 
     <ambientLight intensity={0.25} />
     <pointLight position={[10, 10, 10]} />
