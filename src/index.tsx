@@ -1,6 +1,6 @@
 import { OrbitControls, TransformControls } from '@react-three/drei'
-import { Canvas, extend, ThreeEvent } from '@react-three/fiber'
-import React, { useEffect, useRef, useState } from 'react'
+import { Canvas, extend, ThreeEvent, useThree } from '@react-three/fiber'
+import React, { forwardRef, MutableRefObject, ReactNode, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { Mesh, Vector3 } from 'three'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
@@ -66,12 +66,15 @@ function Node(props: {
   )
 }
 
-function Block(props: {
+type BlockProps = {
   position?: [number, number, number],
+  ref?: MutableRefObject<any>,
   onDraggingChanged: (value: boolean, mesh: Mesh) => any,
   dragging: boolean,
   draggedMesh: Mesh | undefined,
-}) {
+}
+
+const Block = forwardRef<ReactNode, BlockProps>((props, ref) => {
   const mesh = useRef<Mesh>()
   const transformControls: any = useRef(null)
   const { onDraggingChanged } = props
@@ -92,7 +95,7 @@ function Block(props: {
   })
 
   return (
-    <group {...props}>
+    <group {...props} ref={ref}>
       <TransformControls mode="translate" showZ={false} ref={transformControls}>
         <>
           <Node type="female" position={[0, -0.5, 0]} dragging={props.dragging} draggedMesh={props.draggedMesh}/>
@@ -106,11 +109,17 @@ function Block(props: {
       </TransformControls>
     </group>
   )
-}
+})
 
 function Scene() {
   const [dragging, setDragging] = useState(false)
   const [draggedMesh, setDraggedMesh] = useState<Mesh>()
+  const {
+    camera,
+    gl: { domElement }
+  } = useThree()
+  const block1 = useRef()
+  const block2 = useRef()
 
   const onDraggingChanged = (value: boolean, mesh: Mesh) => {
     console.log(`Dragging changed to ${value}`)
@@ -119,15 +128,17 @@ function Scene() {
     console.log(mesh.parent)
   }
 
+  useEffect(() => console.log(block1.current, block2.current))
+
   return <>
     <OrbitControls makeDefault/>
-    {/* <dragControls args={[[mesh], camera, domElement]} /> */}
+    <dragControls args={[[block1, block2], camera, domElement]} />
 
     <ambientLight intensity={0.25} />
     <pointLight position={[10, 10, 10]} />
     
-    <Block position={[-1.2, 0, 0]} onDraggingChanged={onDraggingChanged} dragging={dragging} draggedMesh={draggedMesh}/>
-    <Block position={[1.2, 0, 0]} onDraggingChanged={onDraggingChanged} dragging={dragging} draggedMesh={draggedMesh}/>
+    <Block ref={block1} position={[-1.2, 0, 0]} onDraggingChanged={onDraggingChanged} dragging={dragging} draggedMesh={draggedMesh}/>
+    <Block ref={block2} position={[1.2, 0, 0]} onDraggingChanged={onDraggingChanged} dragging={dragging} draggedMesh={draggedMesh}/>
   </>
 }
 
