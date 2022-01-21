@@ -1,19 +1,10 @@
-import { Canvas, extend, Object3DNode, ThreeEvent, useThree } from '@react-three/fiber'
+/* eslint-disable react-hooks/exhaustive-deps */
+import { OrbitControls } from '@react-three/drei'
+import { Canvas, ThreeEvent } from '@react-three/fiber'
 import React, { forwardRef, MutableRefObject, ReactNode, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { Mesh, Object3D, Vector3 } from 'three'
-import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import './index.scss'
-
-extend({ DragControls })
-
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      dragControls: Object3DNode<DragControls, typeof DragControls>
-    }
-  }
-}
 
 /** A connection point for a Block */
 function Node(props: {
@@ -29,7 +20,7 @@ function Node(props: {
   const mesh = useRef<Mesh>()
 
   const onHover = (e: ThreeEvent<PointerEvent>) => {
-    console.log(e)
+    console.log('hover', e)
     const draggedMesh = props.draggedMesh
     if (!props.dragging) return
     if (!mesh.current) return
@@ -95,17 +86,13 @@ const Block = forwardRef<ReactNode, BlockProps>((props, ref) => {
 
   return (
     <group {...props} ref={ref}>
-      {/* <TransformControls mode="translate" showZ={false} ref={transformControls} enabled={false}>
-        <> */}
-          <Node type="female" position={[0, -0.5, 0]} dragging={props.dragging} draggedMesh={props.draggedMesh}/>
-          <Node type="male" position={[0, 0.5, 0]} dragging={props.dragging} draggedMesh={props.draggedMesh}/>
+      <Node type="female" position={[0, -0.5, 0]} dragging={props.dragging} draggedMesh={props.draggedMesh}/>
+      <Node type="male" position={[0, 0.5, 0]} dragging={props.dragging} draggedMesh={props.draggedMesh}/>
 
-          <mesh ref={mesh}>
-            <boxBufferGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color={'orange'} />
-          </mesh>
-        {/* </>
-      </TransformControls> */}
+      <mesh ref={mesh}>
+        <boxBufferGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={'orange'} />
+      </mesh>
     </group>
   )
 })
@@ -113,10 +100,6 @@ const Block = forwardRef<ReactNode, BlockProps>((props, ref) => {
 function Scene() {
   const [dragging, setDragging] = useState(false)
   const [draggedMesh, setDraggedMesh] = useState<Mesh>()
-  const {
-    camera,
-    gl: { domElement }
-  } = useThree()
   const block1 = useRef<Object3D<Event>>()
   const block2 = useRef<Object3D<Event>>()
 
@@ -127,11 +110,8 @@ function Scene() {
     console.log(mesh.parent)
   }
 
-  useEffect(() => console.log(block1.current, block2.current))
-
   return <>
-    {/* <OrbitControls makeDefault/> */}
-    {block1.current && <dragControls args={[[block1.current], camera, domElement]} transformGroup={true}/>}
+    <OrbitControls makeDefault/>
 
     <ambientLight intensity={0.25} />
     <pointLight position={[10, 10, 10]} />
