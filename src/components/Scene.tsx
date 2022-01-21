@@ -17,7 +17,7 @@ export default function Scene() {
   }
 
   return <>
-    <OrbitControls makeDefault/>
+    {/* <OrbitControls makeDefault/> */}
 
     <ambientLight intensity={0.25} />
     <pointLight position={[10, 10, 10]} />

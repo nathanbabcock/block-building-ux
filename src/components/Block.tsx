@@ -1,5 +1,5 @@
 import { MutableRefObject, forwardRef, ReactNode, useRef, useEffect } from 'react'
-import { Mesh } from 'three'
+import { Group, Mesh } from 'three'
 import Node from './Node'
 
 export type BlockProps = {
@@ -32,8 +32,8 @@ const Block = forwardRef<ReactNode, BlockProps>((props, ref) => {
 
   return (
     <group {...props} ref={ref}>
-      <Node type="female" position={[0, -0.5, 0]} dragging={props.dragging} draggedMesh={props.draggedMesh}/>
-      <Node type="male" position={[0, 0.5, 0]} dragging={props.dragging} draggedMesh={props.draggedMesh}/>
+      <Node type="female" position={[0, -0.5, 0]} parentRef={ref as MutableRefObject<Group>} draggedMesh={props.draggedMesh}/>
+      <Node type="male" position={[0, 0.5, 0]} parentRef={ref as MutableRefObject<Group>} draggedMesh={props.draggedMesh}/>
 
       <mesh ref={mesh}>
         <boxBufferGeometry args={[1, 1, 1]} />
