@@ -1,6 +1,6 @@
 import { ThreeEvent, useThree } from '@react-three/fiber'
-import { MutableRefObject, ReactNode, useEffect, useRef, useState } from 'react'
-import { Group, Matrix4, Mesh, Plane, Raycaster, Vector2, Vector3 } from 'three'
+import { MutableRefObject, useEffect, useRef, useState } from 'react'
+import { Group, Mesh, Plane, Vector3 } from 'three'
 
 /** A connection point for a Block */
 export default function Node(props: {
@@ -13,17 +13,9 @@ export default function Node(props: {
   const [ dragging, setDragging ] = useState(false)
   const { camera } = useThree()
   const [ plane ] = useState(new Plane())
-  const [ originalIntersection ] = useState(new Vector3())
-  // const [ raycaster ] = useState(new Raycaster())
-  // const [ pointer ] = useState(new Vector2())
-  // const [ offset ] = useState(new Vector3())
-  // const [ worldPosition ] = useState(new Vector3())
-  // const [ inverseMatrix ] = useState(new Matrix4())
+  const [ lastIntersection ] = useState(new Vector3())
 
   useEffect(() => console.log('parent', props.parentRef.current))
-
-  const updatePointer = (event: ThreeEvent<MouseEvent>) => {
-  }
 
   const onPointerDown = (event: ThreeEvent<MouseEvent>) => {
     console.log('pointerdown', event)
@@ -33,11 +25,8 @@ export default function Node(props: {
     const point = mesh.current!.getWorldPosition(new Vector3())
     plane.setFromNormalAndCoplanarPoint(normal, point)
     const ray = event.ray
-    ray.intersectPlane(plane, originalIntersection)
-    console.log({point, plane, originalIntersection})
-
-    // inverseMatrix.copy(props.parentRef.current!.parent!.matrixWorld).invert()
-    // offset.copy(point).sub(worldPosition.setFromMatrixPosition(mesh.current!.matrixWorld))
+    ray.intersectPlane(plane, lastIntersection)
+    console.log({point, plane, originalIntersection: lastIntersection})
   }
 
   const onPointerUp = (event: ThreeEvent<MouseEvent>) => {
@@ -51,19 +40,15 @@ export default function Node(props: {
   }
 
   const onPointerMove = (event: ThreeEvent<MouseEvent>) => {
-    // console.log('pointermove', event)
     if (!dragging) return
     const parent = props.parentRef.current as Group
     if (!parent) return
     const ray = event.ray
     const intersection = ray.intersectPlane(plane, new Vector3())
     if (!intersection) return
-    const delta = intersection.clone().sub(originalIntersection)
+    const delta = intersection.clone().sub(lastIntersection)
     parent.position.add(delta)
-    const newPos = parent.position
-    const cameraPos = camera.position
-    originalIntersection.copy(intersection)
-    console.log({cameraPos, ray, intersection, newPos})
+    lastIntersection.copy(intersection)
   }
 
   const onHover = (event: ThreeEvent<PointerEvent>) => {
