@@ -1,4 +1,4 @@
-import { MutableRefObject, forwardRef, ReactNode, useRef, useEffect } from 'react'
+import { forwardRef, MutableRefObject, ReactNode, useEffect, useRef } from 'react'
 import { Group, Mesh } from 'three'
 import Node from './Node'
 
@@ -8,6 +8,7 @@ export type BlockProps = {
   onDraggingChanged: (value: boolean, mesh: Mesh) => any,
   dragging: boolean,
   draggedMesh: Mesh | undefined,
+  setOrbitControlsEnabled: (enabled: boolean) => void,
 }
 
 const Block = forwardRef<ReactNode, BlockProps>((props, ref) => {
@@ -16,7 +17,6 @@ const Block = forwardRef<ReactNode, BlockProps>((props, ref) => {
   const { onDraggingChanged } = props
 
   const draggingChangedListener = (event: any) => {
-    console.log(event)
     onDraggingChanged(event.value, mesh.current!)
   }
 
@@ -32,8 +32,8 @@ const Block = forwardRef<ReactNode, BlockProps>((props, ref) => {
 
   return (
     <group {...props} ref={ref}>
-      <Node type="female" position={[0, -0.5, 0]} parentRef={ref as MutableRefObject<Group>} draggedMesh={props.draggedMesh}/>
-      <Node type="male" position={[0, 0.5, 0]} parentRef={ref as MutableRefObject<Group>} draggedMesh={props.draggedMesh}/>
+      <Node type="female" position={[0, -0.5, 0]} parentRef={ref as MutableRefObject<Group>} setOrbitControlsEnabled={props.setOrbitControlsEnabled} draggedMesh={props.draggedMesh}/>
+      <Node type="male" position={[0, 0.5, 0]} parentRef={ref as MutableRefObject<Group>} setOrbitControlsEnabled={props.setOrbitControlsEnabled} draggedMesh={props.draggedMesh}/>
 
       <mesh ref={mesh}>
         <boxBufferGeometry args={[1, 1, 1]} />

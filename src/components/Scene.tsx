@@ -8,21 +8,35 @@ export default function Scene() {
   const [draggedMesh, setDraggedMesh] = useState<Mesh>()
   const block1 = useRef<Object3D<Event>>()
   const block2 = useRef<Object3D<Event>>()
+  const [orbitControlsEnabled, setOrbitControlsEnabled] = useState(true)
 
   const onDraggingChanged = (value: boolean, mesh: Mesh) => {
-    console.log(`Dragging changed to ${value}`)
     setDragging(value)
     setDraggedMesh(mesh)
-    console.log(mesh.parent)
   }
 
   return <>
-    {/* <OrbitControls makeDefault/> */}
+    <OrbitControls makeDefault enabled={orbitControlsEnabled}/>
 
     <ambientLight intensity={0.25} />
     <pointLight position={[10, 10, 10]} />
     
-    <Block ref={block1} position={[-1.2, 0, 0]} onDraggingChanged={onDraggingChanged} dragging={dragging} draggedMesh={draggedMesh}/>
-    <Block ref={block2} position={[1.2, 0, 0]} onDraggingChanged={onDraggingChanged} dragging={dragging} draggedMesh={draggedMesh}/>
+    <Block
+      ref={block1}
+      position={[-1.2, 0, 0]}
+      setOrbitControlsEnabled={setOrbitControlsEnabled}
+      onDraggingChanged={onDraggingChanged}
+      dragging={dragging}
+      draggedMesh={draggedMesh}
+    />
+
+    <Block
+      ref={block2}
+      position={[1.2, 0, 0]}
+      setOrbitControlsEnabled={setOrbitControlsEnabled}
+      onDraggingChanged={onDraggingChanged}
+      dragging={dragging}
+      draggedMesh={draggedMesh}
+    />
   </>
 }

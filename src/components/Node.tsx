@@ -1,6 +1,7 @@
 import { ThreeEvent, useThree } from '@react-three/fiber'
-import { MutableRefObject, useEffect, useRef, useState } from 'react'
+import { MutableRefObject, useRef, useState } from 'react'
 import { Group, Mesh, Plane, Vector3 } from 'three'
+import type { BlockProps } from './Block'
 
 /** A connection point for a Block */
 export default function Node(props: {
@@ -8,6 +9,7 @@ export default function Node(props: {
   type?: 'male' | 'female',
   parentRef: MutableRefObject<Group>,
   draggedMesh: Mesh | undefined,
+  setOrbitControlsEnabled: BlockProps['setOrbitControlsEnabled'],
 }) {
   const mesh = useRef<Mesh>()
   const [ dragging, setDragging ] = useState(false)
@@ -15,28 +17,26 @@ export default function Node(props: {
   const [ plane ] = useState(new Plane())
   const [ lastIntersection ] = useState(new Vector3())
 
-  useEffect(() => console.log('parent', props.parentRef.current))
-
   const onPointerDown = (event: ThreeEvent<MouseEvent>) => {
-    console.log('pointerdown', event)
     setDragging(true)
+    props.setOrbitControlsEnabled(false)
 
     const normal = camera.getWorldDirection(plane.normal)
     const point = mesh.current!.getWorldPosition(new Vector3())
     plane.setFromNormalAndCoplanarPoint(normal, point)
     const ray = event.ray
     ray.intersectPlane(plane, lastIntersection)
-    console.log({point, plane, originalIntersection: lastIntersection})
   }
 
   const onPointerUp = (event: ThreeEvent<MouseEvent>) => {
-    console.log('pointerup', event)
     setDragging(false)
+    props.setOrbitControlsEnabled(true)
   }
 
   const onPointerOut = (event: ThreeEvent<MouseEvent>) => {
-    console.log('pointerout', event)
+    if (!dragging) return
     setDragging(false)
+    props.setOrbitControlsEnabled(true)
   }
 
   const onPointerMove = (event: ThreeEvent<MouseEvent>) => {
@@ -52,7 +52,6 @@ export default function Node(props: {
   }
 
   const onHover = (event: ThreeEvent<PointerEvent>) => {
-    console.log('hover', event)
     const draggedMesh = props.draggedMesh
     if (!dragging) return
     if (!mesh.current) return
@@ -75,7 +74,6 @@ export default function Node(props: {
     const diff = pairWorldPos.sub(curWorldPos)
     const dest = parent.position.add(diff)
     parent.position.set(dest.x, dest.y, dest.z)
-    console.log('diff', diff)
 
     event.stopPropagation()
   }
