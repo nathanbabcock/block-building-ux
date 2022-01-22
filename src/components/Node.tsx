@@ -8,8 +8,11 @@ export default function Node(props: {
   position?: [number, number, number],
   type?: 'male' | 'female',
   parentRef: MutableRefObject<Group>,
-  draggedMesh: Mesh | undefined,
   setOrbitControlsEnabled: BlockProps['setOrbitControlsEnabled'],
+  globalDragging: boolean,
+  setGlobalDragging: (dragging: boolean) => void
+  draggedMesh?: Group,
+  setDraggedMesh: (group?: Group) => void,
 }) {
   const mesh = useRef<Mesh>()
   const [ dragging, setDragging ] = useState(false)
@@ -17,10 +20,26 @@ export default function Node(props: {
   const [ plane ] = useState(new Plane())
   const [ lastIntersection ] = useState(new Vector3())
 
-  const onPointerDown = (event: ThreeEvent<MouseEvent>) => {
+  const startDragging = () => {
+    if (dragging) return
     setDragging(true)
+    props.setGlobalDragging(true)
     props.setOrbitControlsEnabled(false)
+    props.setDraggedMesh(props.parentRef.current)
+    console.log('startDragging')
+  }
 
+  const stopDragging = () => {
+    if (!dragging) return
+    setDragging(false)
+    props.setGlobalDragging(false)
+    props.setOrbitControlsEnabled(true)
+    props.setDraggedMesh(undefined)
+    console.log('stopDragging')
+  }
+
+  const onPointerDown = (event: ThreeEvent<MouseEvent>) => {
+    startDragging()
     const normal = camera.getWorldDirection(plane.normal)
     const point = mesh.current!.getWorldPosition(new Vector3())
     plane.setFromNormalAndCoplanarPoint(normal, point)
@@ -29,14 +48,11 @@ export default function Node(props: {
   }
 
   const onPointerUp = (event: ThreeEvent<MouseEvent>) => {
-    setDragging(false)
-    props.setOrbitControlsEnabled(true)
+    stopDragging()
   }
 
   const onPointerOut = (event: ThreeEvent<MouseEvent>) => {
-    if (!dragging) return
-    setDragging(false)
-    props.setOrbitControlsEnabled(true)
+    stopDragging()
   }
 
   const onPointerMove = (event: ThreeEvent<MouseEvent>) => {
@@ -49,33 +65,27 @@ export default function Node(props: {
     const delta = intersection.clone().sub(lastIntersection)
     parent.position.add(delta)
     lastIntersection.copy(intersection)
+    console.log('onPointerMove')
   }
 
   const onHover = (event: ThreeEvent<PointerEvent>) => {
-    const draggedMesh = props.draggedMesh
-    if (!dragging) return
-    if (!mesh.current) return
-    if (!draggedMesh) return
-    if (!draggedMesh.parent) return
-    if (mesh.current.parent === draggedMesh.parent) return // Can't snap to self
+    const curMesh = mesh.current!
+    const draggedMesh = props.draggedMesh!
+    const parent = curMesh.parent!
 
-    // Hardcoded traversal of Threejs graph
-    const parent = mesh.current.parent!
-    const draggedParent = draggedMesh.parent
+    if (dragging) return
+    if (!props.globalDragging) return
+    if (parent === draggedMesh) return // Can't snap to self
+
     const pairIndex = props.type === 'female' ? 1 : 0
-    const pairNode = draggedParent.children[pairIndex]
-
-    const pairWorldPos = new Vector3()
-    pairNode.getWorldPosition(pairWorldPos)
-
-    const curWorldPos = new Vector3()
-    mesh.current.getWorldPosition(curWorldPos)
-
+    const pairNode = draggedMesh.children[pairIndex]
+    const pairWorldPos = pairNode.getWorldPosition(new Vector3())
+    const curWorldPos = curMesh.getWorldPosition(new Vector3())
     const diff = pairWorldPos.sub(curWorldPos)
-    const dest = parent.position.add(diff)
-    parent.position.set(dest.x, dest.y, dest.z)
-
-    event.stopPropagation()
+    const dest = draggedMesh.position.sub(diff)
+    draggedMesh.position.copy(dest)
+    console.log('snap')
+    stopDragging()
   }
 
   return (
