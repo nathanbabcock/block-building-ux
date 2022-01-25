@@ -7,7 +7,7 @@ import useStore from '../useStore'
 export default function Node(props: {
   position?: [number, number, number],
   type?: 'male' | 'female',
-  parentRef: MutableRefObject<Group>,
+  parentRef: MutableRefObject<Group | undefined>,
 }) {
   const mesh = useRef<Mesh>()
   const { camera } = useThree()

@@ -1,16 +1,16 @@
-import { forwardRef, MutableRefObject, ReactNode, useRef } from 'react'
+import { ReactNode, useRef } from 'react'
 import { Group, Mesh } from 'three'
 import { NodeType } from '../useStore'
 import Node from './Node'
 
 export type BlockProps = {
   position?: [number, number, number],
-  ref?: MutableRefObject<any>,
   width?: number
   depth?: number
 }
 
-const Block = forwardRef<ReactNode, BlockProps>((props, ref) => {
+export default function Block(props: BlockProps) {
+  const group = useRef<Group>()
   const mesh = useRef<Mesh>()
   const width = props.width ?? 1
   const depth = props.depth ?? 1
@@ -24,13 +24,13 @@ const Block = forwardRef<ReactNode, BlockProps>((props, ref) => {
         nodes.push(<Node
           type={type as NodeType}
           position={[x - ((width-1) / 2), y, z - ((depth-1) / 2)]}
-          parentRef={ref as MutableRefObject<Group>}
+          parentRef={group}
           key={i++}
         />)
       }
 
   return (
-    <group {...props} ref={ref}>
+    <group {...props} ref={group}>
       { nodes }
       <mesh ref={mesh}>
         <boxBufferGeometry args={[width, 1, depth]} />
@@ -38,6 +38,4 @@ const Block = forwardRef<ReactNode, BlockProps>((props, ref) => {
       </mesh>
     </group>
   )
-})
-
-export default Block
+}
