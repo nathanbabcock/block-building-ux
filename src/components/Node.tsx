@@ -15,18 +15,25 @@ export default function Node(props: {
   const [ lastIntersection ] = useState(new Vector3())
   const draggedBlock = useStore(state => state.draggedBlock)
   const setDraggedBlock = useStore(state => state.setDraggedBlock)
+  const draggedNode = useStore(state => state.draggedNode)
+  const setDraggedNode = useStore(state => state.setDraggedNode)
+  const draggedNodeType = useStore(state => state.draggedNodeType)
+  const setDraggedNodeType = useStore(state => state.setDraggedNodeType)
 
   const startDragging = () => {
     const isDragging = !!draggedBlock
     if (isDragging) return
     setDraggedBlock(props.parentRef.current)
-    console.log('startDragging', isDragging)
+    setDraggedNode(mesh.current)
+    setDraggedNodeType(props.type)
   }
 
   const stopDragging = () => {
     const isDragging = !!draggedBlock
     if (!isDragging) return
     setDraggedBlock(undefined)
+    setDraggedNode(undefined)
+    setDraggedNodeType(undefined)
   }
 
   const onPointerDown = (event: ThreeEvent<MouseEvent>) => {
@@ -56,25 +63,20 @@ export default function Node(props: {
     const delta = intersection.clone().sub(lastIntersection)
     parent.position.add(delta)
     lastIntersection.copy(intersection)
-    console.log('onPointerMove')
   }
 
   const onHover = (event: ThreeEvent<PointerEvent>) => {
-    const curMesh = mesh.current!
-    const draggedMesh = draggedBlock
-    const parent = curMesh.parent!
+    if (!mesh.current) return
+    if (!draggedBlock) return 
+    if (!draggedNode) return
+    if (mesh.current.parent! === draggedBlock) return // Can't snap to self
+    if (draggedNodeType === props.type) return // Can't snap to same type
 
-    if (!draggedMesh) return
-    if (parent === draggedMesh) return // Can't snap to self
-
-    const pairIndex = props.type === 'female' ? 1 : 0
-    const pairNode = draggedMesh.children[pairIndex]
-    const pairWorldPos = pairNode.getWorldPosition(new Vector3())
-    const curWorldPos = curMesh.getWorldPosition(new Vector3())
+    const pairWorldPos = draggedNode.getWorldPosition(new Vector3())
+    const curWorldPos = mesh.current.getWorldPosition(new Vector3())
     const diff = pairWorldPos.sub(curWorldPos)
-    const dest = draggedMesh.position.sub(diff)
-    draggedMesh.position.copy(dest)
-    console.log('snap')
+    const dest = draggedBlock.position.sub(diff)
+    draggedBlock.position.copy(dest)
     stopDragging()
   }
 
